@@ -1,0 +1,42 @@
+version: '3.9'
+
+services:
+  db:
+    container_name: db
+    build:
+      context: ./containers/db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: teachua
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: mypassword
+    volumes:
+      - ./containers/db/query:/docker-entrypoint-initdb.d
+    ports:
+      - "3306:3306"
+    restart: always
+
+  backend:
+    container_name: backend
+    build:
+      context: ./containers/backend
+    environment:
+      JDBC_DRIVER: 'org.mariadb.jdbc.Driver'
+      DATASOURCE_URL: 'jdbc:mariadb://db:3306/teachua'
+      DATASOURCE_USER: myuser
+      DATASOURCE_PASSWORD: mypassword
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+  frontend:
+    container_name: frontend
+    build:
+      context: ./containers/frontend
+    environment:
+      REACT_APP_ROOT_SERVER: 'http://localhost:8080'
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
